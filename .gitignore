@@ -46,6 +46,7 @@ coverage.xml
 
 # Virtual Environment
 venv
+.venv
 
 # IDE files
 .idea
@@ -53,3 +54,6 @@ venv
 Gemfile.lock
 .bundle
 .vendor
+
+# Apple
+.DS_Store

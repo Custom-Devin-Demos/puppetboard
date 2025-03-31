@@ -4,7 +4,10 @@ import secrets
 import tempfile
 import base64
 import binascii
+import gevent.monkey
 
+def gevent_monkeypatch():
+    gevent.monkey.patch_all()
 
 def cert_to_file(cert_file_or_string):
     """
@@ -46,7 +49,10 @@ def coerce_bool(v, default):
     return default
 
 
-PUPPETDB_HOST = os.getenv('PUPPETDB_HOST', 'puppetdb')
+gevent_monkeypatch()
+
+# PUPPETDB_HOST = os.getenv('PUPPETDB_HOST', 'puppetdb')
+PUPPETDB_HOST = "puppetdb-read.service.athenaprod-nva1-dc.consul"
 PUPPETDB_PORT = int(os.getenv('PUPPETDB_PORT', '8080'))
 # This may be a bool in string - that's what coerce_bool is for
 # but if it is other string, then it's a path
