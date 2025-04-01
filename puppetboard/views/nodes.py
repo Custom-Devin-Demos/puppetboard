@@ -17,6 +17,52 @@ from puppetboard.utils import (yield_or_stop, check_env, get_or_abort)
 app = get_app()
 puppetdb = get_puppetdb()
 
+def get_puppetdb_url():
+    host = app.config["PUPPETDB_HOST"]
+    port = app.config["PUPPETDB_PORT"]
+    return f'http://{host}:{port}/pdb/query/v4'
+
+def query_node_count(env):
+    nodes_n_qry = {
+        'query': f'nodes[count()] {{ report_environment = "{env}" }}'
+    }
+    nodes_n_json = puppetdb._make_request(
+        url=get_puppetdb_url(),
+        payload=nodes_n_qry,
+        request_method='GET',
+    )
+    [nodes_n] = nodes_n_json if nodes_n_json is not None else [{'count': 0}]
+    return nodes_n['count']
+
+def get_total_pages(node_count):
+    offset = int(app.config['NODE_QRY_OFFSET'])
+    # itertools.batched divvies up total node count into even batches
+    return len(list(batched(range(node_count), offset)))
+
+def compose_pql_env(env):
+    if env != '*':
+        return f'catalog_environment = "{env}"'
+    return ''
+
+def compose_pql_status(status):
+    if status == 'unreported':
+        unreported = datetime.now(timezone.utc)
+        unreported = unreported - timedelta(hours=app.config['UNRESPONSIVE_HOURS'])
+        unreported = unreported.replace(microsecond=0).isoformat()
+        return f'report_timestamp is null or report_timestamp <= "{unreported}"'
+    if status in ['failed', 'changed', 'noop', 'unchanged']:
+        return f'latest_report_status = "{status}"'
+    return ''
+
+def compose_pql_pagination(page, status, orderby='certname asc'):
+    # only paginate if we are not filtering by status, puppetdb applies
+    # pagination before filter conditions
+    if status == '':
+        offset = int(app.config['NODE_QRY_OFFSET']) * int(page)
+        lim = app.config['NODE_QRY_OFFSET']
+        return f'order by {orderby} limit {lim} offset {offset}'
+    return ''
+
 @app.route('/nodes/<int(min=1):page>', defaults={'env': app.config['DEFAULT_ENVIRONMENT'], 'page': 1})
 @app.route('/<env>/nodes/<int(min=1):page>')
 def nodes_paged(env, page):
@@ -24,81 +70,48 @@ def nodes_paged(env, page):
     status_arg = request.args.get('status', '')
     check_env(env, envs)
 
-    nodes_n_qry = {
-        'query': f'nodes[count()] {{ report_environment = "{env}" }}'
-    }
+    pdb_url = get_puppetdb_url()
+    nodes_n = query_node_count(env=env)
+    pages_total = get_total_pages(nodes_n)
 
-    # TODO: read this in from app configs
-    nodes_n_json = puppetdb._make_request(
-        url='http://puppetdb-read.service.athenaprod-nva1-dc.consul:8080/pdb/query/v4',
-        payload=nodes_n_qry,
-        request_method='GET',
-    )
-
-    [nodes_n] = nodes_n_json if nodes_n_json is not None else [{'count': 0}]
-    nodes_n = nodes_n['count']
-
-    offset = int(app.config['NODE_QRY_OFFSET'])
-    offset_current = offset * int(page)
-    lim = app.config['NODE_QRY_LIMIT']
-    pages_total = len(list(batched(range(nodes_n), offset)))
-    # query = AndOperator()
-
-    nodes_qry = {'query': 'nodes'}
     nodes_qry_acc = []
 
-    if env != '*':
-        nodes_qry_acc.append(f'catalog_environment = "{env}"')
-        # query.add(EqualsOperator("catalog_environment", env))
+    qry_env = compose_pql_env(env)
+    if qry_env:
+        nodes_qry_acc.append(qry_env)
+    qry_status = compose_pql_status(status_arg)
+    if qry_status:
+        nodes_qry_acc.append(qry_status)
 
-    if status_arg in ['failed', 'changed', 'unchanged']:
-        nodes_qry_acc.append(f'latest_report_status = "{status_arg}"')
-        # query.add(EqualsOperator('latest_report_status', status_arg))
-    elif status_arg == 'unreported':
-        unreported = datetime.now(timezone.utc)
-        unreported = (unreported -
-                    timedelta(hours=app.config['UNRESPONSIVE_HOURS']))
-        unreported = unreported.replace(microsecond=0).isoformat()
-        nodes_qry_acc.append(f'report_timestamp is null or report_timestamp <= "{unreported}"')
-
-        # unrep_query = OrOperator()
-        # unrep_query.add(NullOperator('report_timestamp', True))
-        # unrep_query.add(LessEqualOperator('report_timestamp', unreported))
-
-        # query.add(unrep_query)
-
-    # if len(query.operations) == 0:
-    #     query = None
-
+    pg_fragment = compose_pql_pagination(page=page, status=status_arg, orderby='certname asc')
     nodes_qry_fragment = ''
     if len(nodes_qry_acc) > 1:
         nodes_qry_fragment += " and ".join(nodes_qry_acc)
+    else:
+        nodes_qry_fragment += nodes_qry_acc[0]
+
+    qry = f'nodes {{{nodes_qry_fragment} {pg_fragment}}}'
 
     nodes = []
-    nodes_qry['query'] = f'{nodes_qry['query']} \
-        {{ {nodes_qry_fragment} order by certname asc \
-            limit {lim} offset {offset_current} \
-        }}'
-
     nodelist = puppetdb._make_request(
-        url='http://puppetdb-read.service.athenaprod-nva1-dc.consul:8080/pdb/query/v4',
-        payload=nodes_qry,
+        url=pdb_url,
+        payload={'query': qry},
         request_method='GET',
     )
-    for node_raw in nodelist:
-        node = Node.create_from_dict(
+    for raw_node in nodelist:
+        nd = Node.create_from_dict(
             query_api=puppetdb,
-            node=node_raw,
+            node=raw_node,
             with_status=True,
             with_event_numbers=False,
             latest_events=False,
             now=datetime.now(),
             unreported=app.config['UNRESPONSIVE_HOURS'],
         )
-        if status_arg and node.status == status_arg:
-            nodes.append(node)
-        if not status_arg:
-            nodes.append(node)
+        # parse everything if there a status filter hasn't been selected,
+        # parse status matches if a status filter has been selected
+        if not status_arg or (status_arg and nd.status == status_arg):
+            nodes.append(nd)
 
     return render_template(
         'nodes_paged.html',
@@ -109,7 +122,7 @@ def nodes_paged(env, page):
         current_page=page,
         next_page=app.url_for('.nodes_paged', env=env, page=page+1),
         prev_page=app.url_for('.nodes_paged', env=env, page=page-1),
-        query=nodes_qry,
+        query=str(qry),
     )
 
 def get_page_next(page, total):
