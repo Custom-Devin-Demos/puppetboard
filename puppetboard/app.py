@@ -53,7 +53,8 @@ log = logging.getLogger(__name__)
 menu_entries = [
     ('index', 'Overview'),
     ('failures', 'Failures'),
-    ('nodes_paged', 'Nodes'),
+    ('nodes', 'Nodes'),
+    ('nodes_paged', 'Nodes (paginated)'),
     ('facts', 'Facts'),
     ('reports', 'Reports'),
     ('metrics', 'Metrics'),

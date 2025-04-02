@@ -10,7 +10,7 @@ PUPPETDB_TIMEOUT = 20
 DEFAULT_ENVIRONMENT = 'nop4dev'
 # this empty string has to be changed, we validate it with check_secret_key()
 SECRET_KEY = ''  # nosec
-UNRESPONSIVE_HOURS = 2
+UNRESPONSIVE_HOURS = 1
 ENABLE_QUERY = True
 # Uncomment to restrict the enabled PuppetDB endpoints in the query page.
 # ENABLED_QUERY_ENDPOINTS = ['facts', 'nodes']
@@ -57,7 +57,7 @@ INVENTORY_FACT_TEMPLATES = {
     'os': "{{ fact_os_detection(value) }}",
 }
 REFRESH_RATE = 30
-DAILY_REPORTS_CHART_ENABLED = True
+DAILY_REPORTS_CHART_ENABLED = False
 DAILY_REPORTS_CHART_DAYS = 8
 WITH_EVENT_NUMBERS = True
 SHOW_ERROR_AS = 'friendly'  # or 'raw'

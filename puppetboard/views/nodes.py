@@ -9,13 +9,15 @@ from puppetboard.core import (REPORTS_COLUMNS, environments, get_app,
                               get_puppetdb, stream_template)
 from puppetboard.utils import (calc_batches, check_env, compose_pql_env,
                                compose_pql_pagination, compose_pql_status,
-                               get_or_abort, query_node_count)
+                               get_or_abort, query_node_env_count)
 
 
 app = get_app()
 puppetdb = get_puppetdb()
 
 @app.route('/nodes_paged', defaults={'env': app.config['DEFAULT_ENVIRONMENT'], 'page': 0})
+@app.route('/nodes_paged/<int(min=0):page>', defaults={'env': app.config['DEFAULT_ENVIRONMENT']})
+@app.route('/<env>/nodes_paged/', defaults={'page': 0})
 @app.route('/<env>/nodes_paged/<int(min=0):page>')
 def nodes_paged(env, page):
     envs = environments()
@@ -23,11 +25,10 @@ def nodes_paged(env, page):
     check_env(env, envs)
 
     pdb_url = f'{puppetdb.base_url}/pdb/query/v4'
-    nodes_n = query_node_count(env=env, client=puppetdb)
+    nodes_n = query_node_env_count(env=env, client=puppetdb)
     pages_total = calc_batches(nodes_n, app=app)
 
     nodes_qry_acc = []
-
     nodes_qry_acc.append(compose_pql_env(env))
     nodes_qry_acc.append(compose_pql_status(status_arg, app=app))
     nodes_qry_clean = [frg for frg in nodes_qry_acc if frg]

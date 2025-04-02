@@ -2,12 +2,6 @@
 {% import '_macros.html' as macros %}
 {% block content %}
 <div class="ui grid">
-  <div class="fourteen wide column">
-    <div class="ui fluid icon input">
-      <input id="main-table-search" autofocus="autofocus" type="text" placeholder="Type here to filter...">
-      <i class="search icon"></i>
-    </div>
-  </div>
   <div class="two wide column">
     <div class="ui fluid icon dropdown large basic button">
       <input name="status" type="hidden" value="Failed">
@@ -23,43 +17,47 @@
       </div>
     </div>
   </div>
-  <div class="four wide column">
-    <div class="ui fluid icon large basic button">
+</div>
+<div class="ui right floated segment">
+  {% if current_page > 0 %}
+  <div class="buttons">
+    <div class="ui labeled icon button">
+      <i class="angle double left icon"></i>
       <a href="{{first_page_url}}">First</a>
     </div>
-
-    {% if current_page > 0 %}
-    <div class="ui fluid icon large basic button">
+    <div class="ui button">
+      <i class="angle left icon"></i>
       <a href="{{prev_page_url}}">Back</a>
     </div>
-    {% endif %}
-
-    {% if current_page+1 <= pages %}
-    <div class="ui fluid icon large basic button">
+  </div>
+  {% endif %}
+  {% if current_page+1 <= pages %}
+  <div class="buttons">
+    <div class="ui button">
       <a href="{{next_page_url}}">Next</a>
+      <i class="angle right icon"></i>
     </div>
-    {% endif %}
-
-    <div class="ui fluid icon large basic button">
+    <div class="ui right labeled icon button">
+      <i class="angle double right icon"></i>
       <a href="{{last_page_url}}">Last</a>
     </div>
   </div>
-  </div>
-  <div>
-    <ul>
-      <li>Current page / total pages: {{current_page}} / {{pages}}</li>
-      <li>First page URL: {{first_page_url}}</li>
-      <li>Next page URL: {{next_page_url}}</li>
-      <li>Previous page URL: {{prev_page_url}}</li>
-      <li>Last page URL: {{last_page_url}}</li>
-      <li>
-        <span>
-          Current query:
-          {{query}}
-        </span>
-      </li>
-    </ul>
-  </div>
+  {% endif %}
+</div>
+<div>
+  <ul>
+    <li>Current page / total pages: {{current_page}} / {{pages}}</li>
+    <li>First page URL: {{first_page_url}}</li>
+    <li>Next page URL: {{next_page_url}}</li>
+    <li>Previous page URL: {{prev_page_url}}</li>
+    <li>Last page URL: {{last_page_url}}</li>
+    <li>
+      <span>
+        Current query:
+        {{query}}
+      </span>
+    </li>
+  </ul>
 </div>
 <table
   id="main-table"
