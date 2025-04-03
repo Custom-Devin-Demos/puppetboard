@@ -21,26 +21,14 @@
 <div class="ui right floated segment">
   {% if current_page > 0 %}
   <div class="ui buttons">
-    <div class="ui labeled icon button">
-      <i class="angle double left icon"></i>
-      <a href="{{first_page_url}}">First</a>
-    </div>
-    <div class="ui button">
-      <i class="angle left icon"></i>
-      <a href="{{prev_page_url}}">Back</a>
-    </div>
+    <a class="ui labeled icon button" href="{{first_page_url}}"><i class="angle double left icon"></i>First</a>
+    <a class="ui button" href="{{prev_page_url}}"><i class="angle left icon"></i>Back</a>
   </div>
   {% endif %}
   {% if current_page+1 <= pages %}
   <div class="ui buttons">
-    <div class="ui button">
-      <a href="{{next_page_url}}">Next</a>
-      <i class="angle right icon"></i>
-    </div>
-    <div class="ui right labeled icon button">
-      <i class="angle double right icon"></i>
-      <a href="{{last_page_url}}">Last</a>
-    </div>
+    <a class="ui button" href="{{next_page_url}}"><i class="angle right icon"></i>Next</a>
+    <a class="ui labeled icon button" href="{{last_page_url}}"><i class="angle double right icon"></i>Last</a>
   </div>
   {% endif %}
 </div>

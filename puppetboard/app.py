@@ -26,6 +26,8 @@ import puppetboard.views.metrics  # noqa: F401
 # noinspection PyUnresolvedReferences
 import puppetboard.views.nodes  # noqa: F401
 # noinspection PyUnresolvedReferences
+import puppetboard.views.nodes_paged  # noqa: F401
+# noinspection PyUnresolvedReferences
 import puppetboard.views.query  # noqa: F401
 # noinspection PyUnresolvedReferences
 import puppetboard.views.radiator  # noqa: F401

@@ -1,9 +1,8 @@
 from datetime import datetime
 from flask import render_template
-from pypuppetdb.QueryBuilder import AndOperator, EqualsOperator, FunctionOperator, ExtractOperator
 from pypuppetdb.types import Node
 from puppetboard.core import get_app, get_puppetdb, environments
-from puppetboard.utils import compose_pql_env, compose_pql_pagination, compose_pql_status, get_or_abort, check_env, query_node_env_count, query_node_count, query_node_status_count, query_resource_count, query_resource_env_count, query_status_counts
+from puppetboard.utils import compose_pql_env, compose_pql_status, check_env, query_node_env_count, query_node_count, query_resource_count, query_resource_env_count, query_status_counts
 
 app = get_app()
 puppetdb = get_puppetdb()
