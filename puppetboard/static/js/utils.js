@@ -1,7 +1,7 @@
 /**
  * Simple debounce function
  */
-debounce = function(cb, delay = 250) {
+const debounce = function(cb, delay = 250) {
   let timeout
 
   return (...args) => {
