@@ -1,13 +1,13 @@
 function resizeMe() {
-  var preferredHeight = 944;
-  var displayHeight = $(window).height();
-  var percentageHeight = displayHeight / preferredHeight;
+  const preferredHeight = 944;
+  const displayHeight = $(window).height();
+  const percentageHeight = displayHeight / preferredHeight;
 
-  var preferredWidth = 1100;
-  var displayWidth = $(window).width();
-  var percentageWidth = displayWidth / preferredWidth;
+  const preferredWidth = 1100;
+  const displayWidth = $(window).width();
+  const percentageWidth = displayWidth / preferredWidth;
 
-  var newFontSize;
+  let newFontSize;
   if (percentageHeight < percentageWidth) {
     newFontSize = Math.floor("960" * percentageHeight) - 30;
   } else {
