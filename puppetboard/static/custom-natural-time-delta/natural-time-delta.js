@@ -28,30 +28,30 @@ jQuery.extend(jQuery.fn.dataTableExt.oSort,{
         // get the non-formatted value from title
         data = data.match(/title="(.*?)"/)[1].toLowerCase();
 
-        var total_duration = 0;
-        var pattern = /(\d+\s*decades?\s*)?(\d+\s*years?\s*)?(\d+\s*months?\s*)?(\d+\s*weeks?\s*)?(\d+\s*days?\s*)?(\d+:?\d*?\s*hours?\s*)?(\d+\s*minutes?\s*)?(\d+\s*seconds?\s*)?(\d+\s*milliseconds?\s*)?(\d+\s*microseconds?\s*)?/i
-        var get_duration = function (el, unit_name, duration_in_seconds) {
+        let total_duration = 0;
+        const pattern = /(\d+\s*decades?\s*)?(\d+\s*years?\s*)?(\d+\s*months?\s*)?(\d+\s*weeks?\s*)?(\d+\s*days?\s*)?(\d+:?\d*?\s*hours?\s*)?(\d+\s*minutes?\s*)?(\d+\s*seconds?\s*)?(\d+\s*milliseconds?\s*)?(\d+\s*microseconds?\s*)?/i
+        const get_duration = function (el, unit_name, duration_in_seconds) {
             if (el === undefined) {
                 return 0;
             }
 
-            var split_by = unit_name[0]
-            var no_of_units = el.split(split_by)[0].trim()
+            const split_by = unit_name[0]
+            const no_of_units = el.split(split_by)[0].trim()
 
             if ((unit_name === "hour") && (no_of_units.split(':').length === 2)) {
                 // this is hour with minutes looking like this: "1:26 hours"
-                var hours = parseFloat(no_of_units.split(':')[0]);
-                var minutes = parseFloat(no_of_units.split(':')[1]);
+                const hours = parseFloat(no_of_units.split(':')[0]);
+                const minutes = parseFloat(no_of_units.split(':')[1]);
                 return (hours * 60 * 60) + (minutes * 60);
             } else {
                 return parseFloat(no_of_units) * duration_in_seconds;
             }
         };
 
-        var matches = data.match(pattern);
+        const matches = data.match(pattern);
         matches.reverse();
 
-        var time_elements = [
+        const time_elements = [
             {"unit_name": "microsecond", "duration_in_seconds": 1 / 1000 / 1000},
             {"unit_name": "millisecond", "duration_in_seconds": 1 / 1000},
             {"unit_name": "second", "duration_in_seconds": 1},
@@ -65,7 +65,7 @@ jQuery.extend(jQuery.fn.dataTableExt.oSort,{
         ];
 
         time_elements.forEach(function (el, i) {
-            var duration = get_duration(matches[i], el["unit_name"], el["duration_in_seconds"]);
+            const duration = get_duration(matches[i], el["unit_name"], el["duration_in_seconds"]);
             total_duration += duration;
         });
 
